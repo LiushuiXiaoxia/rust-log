@@ -49,10 +49,10 @@ class MainActivity : ComponentActivity() {
             Log.e(TAG, "onCreate: d = ${d.absolutePath}")
             na.initLog(d.absolutePath)
             repeat(10) {
-//                na.logDebug(TAG, "Hello from thread $it")
-//                na.logInfo(TAG, "Hello from thread $it")
-//                na.logWarn(TAG, "Hello from thread $it")
-//                na.logError(TAG, "Hello from thread $it")
+                na.logDebug(TAG, "Hello from thread $it")
+                na.logInfo(TAG, "Hello from thread $it")
+                na.logWarn(TAG, "Hello from thread $it")
+                na.logError(TAG, "Hello from thread $it")
             }
             na.closeLogger()
         }

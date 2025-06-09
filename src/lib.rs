@@ -1,7 +1,8 @@
 use chrono::Local;
 use once_cell::sync::OnceCell;
-use std::ffi::{c_char, CStr};
-use std::fs::{create_dir, OpenOptions};
+use std::ffi::{CStr, c_char};
+use std::fs;
+use std::fs::{OpenOptions, create_dir};
 use std::io::Write;
 use std::sync::{Arc, Mutex};
 
@@ -34,6 +35,7 @@ impl LogLevel {
     }
 }
 
+#[derive(Debug)]
 struct Logger {
     file_path: String,
     file_mutex: Mutex<()>,
@@ -41,8 +43,10 @@ struct Logger {
 
 impl Logger {
     fn new(dir: &str) -> Logger {
-        create_dir(dir).expect("create dir error");
-        let t = Local::now().format("log-%Y%m%d.log").to_string();
+        if fs::exists(dir).is_err() {
+            create_dir(dir).unwrap();
+        }
+        let t = Local::now().format("rust-%Y%m%d.log").to_string();
         let file = format!("{}/{}", dir, t);
         Logger {
             file_path: file,
@@ -100,17 +104,31 @@ pub extern "C" fn log_write(level: *const c_char, tag: *const c_char, msg: *cons
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::sync::atomic::Ordering::AcqRel;
 
     #[test]
     fn it_works() {
         let logger = Logger::new("./logs");
+        LOGGER.set(Arc::new(logger)).expect("TODO: panic message");
         for i in 0..50 {
             let tag = "test-tag";
             let msg = format!("This is test log msg, i = {}", i);
-            logger.write(LogLevel::Debug, tag, msg.as_str());
-            logger.write(LogLevel::Info, tag, msg.as_str());
-            logger.write(LogLevel::Warn, tag, msg.as_str());
-            logger.write(LogLevel::Error, tag, msg.as_str());
+            LOGGER
+                .get()
+                .unwrap()
+                .write(LogLevel::Debug, tag, msg.as_str());
+            LOGGER
+                .get()
+                .unwrap()
+                .write(LogLevel::Info, tag, msg.as_str());
+            LOGGER
+                .get()
+                .unwrap()
+                .write(LogLevel::Warn, tag, msg.as_str());
+            LOGGER
+                .get()
+                .unwrap()
+                .write(LogLevel::Error, tag, msg.as_str());
         }
     }
 }
