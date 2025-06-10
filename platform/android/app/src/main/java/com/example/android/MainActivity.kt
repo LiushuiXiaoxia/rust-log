@@ -2,6 +2,7 @@ package com.example.android
 
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -39,8 +40,6 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-
-
         thread {
             val s = na.stringFromJNI()
             Log.i(TAG, "stringFromJNI: $s")
@@ -55,6 +54,13 @@ class MainActivity : ComponentActivity() {
                 na.logError(TAG, "Hello from thread $it")
             }
             na.closeLogger()
+
+            val f = d.listFiles()?.minByOrNull { it.lastModified() }
+            Log.e(TAG, "onCreate: ${d.listFiles()?.map { it.name }}")
+            val liens = f?.readLines()?.size ?: 0
+            runOnUiThread {
+                Toast.makeText(this, "Logs test success. lines = $liens", Toast.LENGTH_LONG).show()
+            }
         }
     }
 }

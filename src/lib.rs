@@ -1,5 +1,5 @@
 use crate::log::{LogLevel, Logger};
-use std::ffi::{CStr, c_char};
+use std::ffi::{CStr, c_char, c_void};
 use std::sync::Arc;
 
 mod log;
@@ -12,12 +12,6 @@ mod android;
 mod ios;
 
 pub fn init(dir: &str) {
-    #[cfg(target_os = "android")]
-    android::init_android();
-
-    #[cfg(target_os = "ios")]
-    ios::init_ios();
-
     log::LOGGER
         .set(Arc::new(Logger::new(dir)))
         .expect("init logger error");
@@ -37,9 +31,28 @@ pub fn log_message(level: &str, tag: &str, msg: &str) {
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn log_init(dir: *const c_char) {
+pub extern "C" fn log_init(ctx: *mut c_void, dir: *const c_char) {
     if dir.is_null() {
         return;
+    }
+    #[cfg(target_os = "android")]
+    {
+        use jni::JNIEnv;
+        // use jni::JavaVM;
+        // use jni::objects::JObject;
+
+        // 安全转换上下文为 JNIEnv 指针（必须来自 JNI 环境传入）
+        let env_ptr = ctx as *mut jni::sys::JNIEnv;
+        let env = unsafe { JNIEnv::from_raw(env_ptr).expect("Invalid JNIEnv") };
+
+        // let jvm = env.get_java_vm().expect("Failed to get JavaVM");
+        android::init_android(&env);
+    }
+
+    #[cfg(target_os = "ios")]
+    {
+        // iOS 忽略 ctx，直接初始化日志系统
+        ios::init_ios();
     }
 
     let dir_str = unsafe { CStr::from_ptr(dir).to_string_lossy() };
