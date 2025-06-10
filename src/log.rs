@@ -57,7 +57,7 @@ impl Logger {
     }
 
     pub fn write(&self, level: LogLevel, tag: &str, msg: &str) {
-        let timestamp = Local::now().format("%Y-%m-%d %H:%M:%S").to_string();
+        let timestamp = Local::now().format("%Y-%m-%d %H:%M:%S%.3f").to_string();
         let line = format!("{} [{}] [{}] {}\n", timestamp, level.as_str(), tag, msg);
 
         let _lock = self.file_mutex.lock().unwrap();

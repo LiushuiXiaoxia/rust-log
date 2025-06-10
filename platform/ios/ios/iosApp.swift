@@ -39,7 +39,7 @@ struct iosApp: App {
     log_init(nil, downloadsURL.path())
     print("downloadsURL = \(downloadsURL)")
 
-    for i in 1...100 {
+    for i in 1...20 {
       log_write("debug", "ios", "test log msg \(i)")
       log_write("info", "ios", "test log msg \(i)")
       log_write("warn", "ios", "test log msg \(i)")
