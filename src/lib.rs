@@ -1,75 +1,40 @@
-use chrono::Local;
-use once_cell::sync::OnceCell;
+use crate::log::{LogLevel, Logger};
 use std::ffi::{CStr, c_char};
-use std::fs;
-use std::fs::{OpenOptions, create_dir};
-use std::io::Write;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 
-#[derive(Debug)]
-enum LogLevel {
-    Debug,
-    Info,
-    Warn,
-    Error,
+mod log;
+mod test;
+
+#[cfg(target_os = "android")]
+mod android;
+
+#[cfg(target_os = "ios")]
+mod ios;
+
+pub fn init(dir: &str) {
+    #[cfg(target_os = "android")]
+    android::init_android();
+
+    #[cfg(target_os = "ios")]
+    ios::init_ios();
+
+    log::LOGGER
+        .set(Arc::new(Logger::new(dir)))
+        .expect("init logger error");
 }
 
-impl LogLevel {
-    fn new(level: &str) -> LogLevel {
-        match level.to_lowercase().as_str() {
-            "debug" => LogLevel::Debug,
-            "info" => LogLevel::Info,
-            "warn" => LogLevel::Warn,
-            "error" => LogLevel::Error,
-            _ => LogLevel::Info,
-        }
-    }
+pub fn log_message(level: &str, tag: &str, msg: &str) {
+    #[cfg(target_os = "android")]
+    android::android_log(level, tag, msg);
 
-    fn as_str(&self) -> &'static str {
-        match self {
-            LogLevel::Debug => "DEBUG",
-            LogLevel::Info => "INFO",
-            LogLevel::Warn => "WARN",
-            LogLevel::Error => "ERROR",
-        }
-    }
+    #[cfg(target_os = "ios")]
+    ios::ios_log(level, tag, msg);
+
+    log::LOGGER
+        .get()
+        .unwrap()
+        .write(LogLevel::new(level), tag, msg);
 }
-
-#[derive(Debug)]
-struct Logger {
-    file_path: String,
-    file_mutex: Mutex<()>,
-}
-
-impl Logger {
-    fn new(dir: &str) -> Logger {
-        if fs::exists(dir).is_err() {
-            create_dir(dir).unwrap();
-        }
-        let t = Local::now().format("rust-%Y%m%d.log").to_string();
-        let file = format!("{}/{}", dir, t);
-        Logger {
-            file_path: file,
-            file_mutex: Mutex::new(()),
-        }
-    }
-
-    fn write(&self, level: LogLevel, tag: &str, msg: &str) {
-        let timestamp = Local::now().format("%Y-%m-%d %H:%M:%S").to_string();
-        let line = format!("{} [{}] [{}] {}\n", timestamp, level.as_str(), tag, msg);
-
-        let _lock = self.file_mutex.lock().unwrap();
-        if let Ok(mut file) = OpenOptions::new()
-            .create(true)
-            .append(true)
-            .open(&self.file_path)
-        {
-            let _ = file.write_all(line.as_bytes());
-        }
-    }
-}
-
-static LOGGER: OnceCell<Arc<Logger>> = OnceCell::new();
 
 #[unsafe(no_mangle)]
 pub extern "C" fn log_init(dir: *const c_char) {
@@ -78,8 +43,7 @@ pub extern "C" fn log_init(dir: *const c_char) {
     }
 
     let dir_str = unsafe { CStr::from_ptr(dir).to_string_lossy() };
-    let logger = Arc::new(Logger::new(&dir_str));
-    let _ = LOGGER.set(logger);
+    init(&dir_str);
 }
 
 #[unsafe(no_mangle)]
@@ -88,47 +52,9 @@ pub extern "C" fn log_write(level: *const c_char, tag: *const c_char, msg: *cons
         return;
     }
 
-    let logger = LOGGER.get();
-    if logger.is_none() {
-        return; // Not initialized
-    }
-
     let level_str = unsafe { CStr::from_ptr(level).to_string_lossy() };
     let tag_str = unsafe { CStr::from_ptr(tag).to_string_lossy() };
     let msg_str = unsafe { CStr::from_ptr(msg).to_string_lossy() };
 
-    let level_enum = LogLevel::new(&level_str);
-    logger.unwrap().write(level_enum, &tag_str, &msg_str);
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use std::sync::atomic::Ordering::AcqRel;
-
-    #[test]
-    fn it_works() {
-        let logger = Logger::new("./logs");
-        LOGGER.set(Arc::new(logger)).expect("TODO: panic message");
-        for i in 0..50 {
-            let tag = "test-tag";
-            let msg = format!("This is test log msg, i = {}", i);
-            LOGGER
-                .get()
-                .unwrap()
-                .write(LogLevel::Debug, tag, msg.as_str());
-            LOGGER
-                .get()
-                .unwrap()
-                .write(LogLevel::Info, tag, msg.as_str());
-            LOGGER
-                .get()
-                .unwrap()
-                .write(LogLevel::Warn, tag, msg.as_str());
-            LOGGER
-                .get()
-                .unwrap()
-                .write(LogLevel::Error, tag, msg.as_str());
-        }
-    }
+    log_message(&level_str, &tag_str, &msg_str);
 }
