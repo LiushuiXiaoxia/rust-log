@@ -1,6 +1,6 @@
 
-#ANDROID_OUT=out/jniLibs
 ANDROID_OUT=platform/android/nlog/src/main/jniLibs
+IOS_OUT=platform/ios/nlog/
 
 build:
 	cargo clean && cargo build
@@ -17,4 +17,14 @@ androidLib: build
 	cp rustlog.h  $(ANDROID_OUT)
 
 androidApp: androidLib
-	cd platform/android && ./gradlew clean && ./gradlew assemble
+	cd platform/android && ./gradlew clean && ./gradlew assembleDebug
+
+
+#iosLib: build
+iosLib:
+	rustup target add aarch64-apple-ios-sim
+	cargo clean
+	rm -rf $(IOS_OUT) && mkdir -p $(IOS_OUT)
+	cargo build --target aarch64-apple-ios-sim --release && \
+	cp target/aarch64-apple-ios-sim/release/librustlog.a $(IOS_OUT)
+	cp rustlog.h  $(IOS_OUT)
