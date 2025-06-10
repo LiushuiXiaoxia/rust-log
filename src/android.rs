@@ -1,7 +1,9 @@
+use crate::log::LogLevel;
 use jni::JNIEnv;
 use jni::JavaVM;
-use jni::objects::JString;
+use libc::{c_char, c_int};
 use once_cell::sync::OnceCell;
+use std::ffi::CString;
 
 static JVM: OnceCell<JavaVM> = OnceCell::new();
 
@@ -10,23 +12,22 @@ pub fn init_android(env: &JNIEnv) {
     JVM.set(jvm).ok();
 }
 
-pub fn android_log(_level: &str, _tag: &str, _msg: &str) {
-    // if let Some(jvm) = JVM.get() {
-    //     let env = jvm.attach_current_thread().unwrap();
-    //     let log_class = env.find_class("android/util/Log").unwrap();
-    //     let tag_j = env.new_string(tag).unwrap();
-    //     let msg_j = env.new_string(msg).unwrap();
-    //     let method = match level {
-    //         "info" => "i",
-    //         "warn" => "w",
-    //         "error" => "e",
-    //         _ => "d",
-    //     };
-    //     let _ = env.call_static_method(
-    //         log_class,
-    //         method,
-    //         "(Ljava/lang/String;Ljava/lang/String;)I",
-    //         &[tag_j.into(), msg_j.into()],
-    //     );
-    // }
+#[cfg(target_os = "android")]
+#[link(name = "log")]
+extern "C" {
+    pub fn __android_log_print(prio: c_int, tag: *const c_char, fmt: *const c_char, ...) -> c_int;
+}
+
+pub fn android_log(level: &str, tag: &str, msg: &str) {
+    let c_tag = CString::new(tag).unwrap();
+    let c_msg = CString::new(msg).unwrap();
+    let androidLevel: c_int = match LogLevel::new(level) {
+        LogLevel::Debug => 3,
+        LogLevel::Info => 4,
+        LogLevel::Warn => 5,
+        LogLevel::Error => 6,
+    };
+    unsafe {
+        __android_log_print(androidLevel, c_tag.as_ptr(), c_msg.as_ptr());
+    }
 }

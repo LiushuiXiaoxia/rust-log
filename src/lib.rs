@@ -31,18 +31,16 @@ pub fn log_message(level: &str, tag: &str, msg: &str) {
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn log_init(ctx: *mut c_void, dir: *const c_char) {
+pub extern "C" fn log_init(_ctx: *mut c_void, dir: *const c_char) {
     if dir.is_null() {
         return;
     }
     #[cfg(target_os = "android")]
     {
         use jni::JNIEnv;
-        // use jni::JavaVM;
-        // use jni::objects::JObject;
 
         // 安全转换上下文为 JNIEnv 指针（必须来自 JNI 环境传入）
-        let env_ptr = ctx as *mut jni::sys::JNIEnv;
+        let env_ptr = _ctx as *mut jni::sys::JNIEnv;
         let env = unsafe { JNIEnv::from_raw(env_ptr).expect("Invalid JNIEnv") };
 
         // let jvm = env.get_java_vm().expect("Failed to get JavaVM");
@@ -51,7 +49,7 @@ pub extern "C" fn log_init(ctx: *mut c_void, dir: *const c_char) {
 
     #[cfg(target_os = "ios")]
     {
-        // iOS 忽略 ctx，直接初始化日志系统
+        // iOS 忽略 _ctx，直接初始化日志系统
         ios::init_ios();
     }
 

@@ -48,16 +48,16 @@ class MainActivity : ComponentActivity() {
             Log.e(TAG, "onCreate: d = ${d.absolutePath}")
             na.initLog(d.absolutePath)
             repeat(10) {
-                na.logDebug(TAG, "Hello from thread $it")
-                na.logInfo(TAG, "Hello from thread $it")
-                na.logWarn(TAG, "Hello from thread $it")
-                na.logError(TAG, "Hello from thread $it")
+                na.logDebug(TAG, "Hello from thread, debug log $it")
+                na.logInfo(TAG, "Hello from thread, info log $it")
+                na.logWarn(TAG, "Hello from thread, warn log $it")
+                na.logError(TAG, "Hello from thread,  error log $it")
             }
             na.closeLogger()
 
             val f = d.listFiles()?.minByOrNull { it.lastModified() }
-            Log.e(TAG, "onCreate: ${d.listFiles()?.map { it.name }}")
             val liens = f?.readLines()?.size ?: 0
+            Log.e(TAG, "onCreate: ${d.listFiles()?.map { it.name }}, lines = $liens")
             runOnUiThread {
                 Toast.makeText(this, "Logs test success. lines = $liens", Toast.LENGTH_LONG).show()
             }
