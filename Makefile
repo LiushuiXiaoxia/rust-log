@@ -1,6 +1,7 @@
 
 ANDROID_OUT=platform/android/nlog/src/main/jniLibs
 IOS_OUT=platform/ios/nlog/
+HARMONY_OUT=platform/harmony_demo/entry/libs/arm64-v8a
 
 build:
 	cargo clean && cargo build
@@ -28,3 +29,10 @@ iosLib:
 	cargo build --target aarch64-apple-ios-sim --release && \
 	cp target/aarch64-apple-ios-sim/release/librustlog.a $(IOS_OUT)
 	cp rustlog.h  $(IOS_OUT)
+
+harmonyLib: build
+	rustup target add aarch64-unknown-linux-ohos
+	cargo clean
+	# rm -rf $(HARMONY_OUT)
+	cargo build --target aarch64-unknown-linux-ohos --release
+	cp rustlog.h  $(HARMONY_OUT)

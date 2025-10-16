@@ -11,6 +11,9 @@ mod android;
 #[cfg(target_os = "ios")]
 mod ios;
 
+#[cfg(ohos)]
+mod ohos;
+
 pub fn init(dir: &str) {
     log::LOGGER
         .set(Arc::new(Logger::new(dir)))

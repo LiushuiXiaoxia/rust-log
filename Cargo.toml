@@ -20,3 +20,15 @@ android_logger = "0.15.0"
 [target.'cfg(target_os = "ios")'.dependencies]
 objc = "0.2"
 objc-foundation = "0.1"
+
+[target.aarch64-unknown-linux-ohos]
+rustflags = ["--cfg", "ohos"]
+cc = "/Users/leon/sdks/ohos-sdk/18/aarch64-unknown-linux-ohos-clang.sh"
+cxx = "/Users/leon/sdks/ohos-sdk/18/aarch64-unknown-linux-ohos-clang++.sh"
+ar = "/Users/leon/sdks/ohos-sdk/18/ohos-sdk/native/llvm/bin/llvm-ar"
+ranlib = "/Users/leon/sdks/ohos-sdk/18/ohos-sdk/native/llvm/bin/llvm-ranlib"
+linker  = "/Users/leon/sdks/ohos-sdk/18/aarch64-unknown-linux-ohos-clang.sh"
+
+#[features]
+#ohos = []
+#[target.'cfg(target_os = "ohos")'.dependencies]
