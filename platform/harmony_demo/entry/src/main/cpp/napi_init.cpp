@@ -48,9 +48,9 @@ static napi_value LogInit(napi_env env, napi_callback_info info) {
 
     free(dir);
 
-    napi_value sum;
-    napi_create_double(env, 1, &sum);
-    return sum;
+    napi_value ret;
+    napi_create_int32(env, 1, &ret);
+    return ret;
 }
 
 static napi_value LogMessage(napi_env env, napi_callback_info info) {
@@ -96,9 +96,9 @@ static napi_value LogMessage(napi_env env, napi_callback_info info) {
 //    std::string msg = "Hello world from napi 123";
 //    log_write(level.c_str(), tag.c_str(), msg.c_str());
 
-    napi_value sum;
-    napi_create_double(env, 1, &sum);
-    return sum;
+    napi_value ret;
+    napi_create_int32(env, 1, &ret);
+    return ret;
 }
 
 EXTERN_C_START
