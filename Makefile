@@ -35,4 +35,7 @@ harmonyLib: build
 	cargo clean
 	# rm -rf $(HARMONY_OUT)
 	cargo build --target aarch64-unknown-linux-ohos --release
+	cp target/aarch64-unknown-linux-ohos/release/librustlog.so  $(HARMONY_OUT)
+	#cargo build --target aarch64-unknown-linux-ohos
+	#cp target/aarch64-unknown-linux-ohos/debug/librustlog.so  $(HARMONY_OUT)
 	cp rustlog.h  $(HARMONY_OUT)

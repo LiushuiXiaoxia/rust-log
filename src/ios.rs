@@ -3,7 +3,9 @@ use objc::runtime::{Class, Object};
 use objc::{msg_send, sel, sel_impl};
 use objc_foundation::INSString;
 
-pub fn init_ios() {}
+pub fn init_ios() {
+    println!("{}", "init ios");
+}
 
 extern "C" {
     fn NSLog(format: *const objc::runtime::Object, ...);

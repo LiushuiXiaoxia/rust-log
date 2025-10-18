@@ -11,7 +11,7 @@ mod android;
 #[cfg(target_os = "ios")]
 mod ios;
 
-#[cfg(ohos)]
+#[cfg(target_env = "ohos")]
 mod ohos;
 
 pub fn init(dir: &str) {
